@@ -8,7 +8,6 @@ import json
 import time
 from bs4 import BeautifulSoup 
 from io import BytesIO
-import tempfile
 main = Blueprint('main', __name__)
     
 
