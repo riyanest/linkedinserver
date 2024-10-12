@@ -118,21 +118,6 @@ def scrape_post_with_selenium(url):
                                 'images': None,
                                 'success':None,
                 'error': f"Error extracting video details: {e}"}
-
-        # Extract images from the feed
-        # images = []
-        # try:
-        #     if article:
-        #         # Find all img tags within the article
-        #         img_tags = article.find_all('img')
-        #         for img in img_tags:
-        #             img_src = img.get('data-delayed-url') or img.get('src')
-        #             if img_src:
-        #                 images.append(img_src)
-        # except Exception as e:
-        #     return {'error': f"Error extracting images: {e}"}
-        
-        # Quit the browser
         driver.quit()
 
         # Return the extracted data
@@ -146,41 +131,18 @@ def scrape_post_with_selenium(url):
   except Exception as e:
     # Return error if any part of the process fails
     return {'error': str(e)}
-  
-def download_video(response):
-    print("in download func")
-    return send_file(response, as_attachment=True, download_name='video.mp4', mimetype='video/mp4')
-# def download_video(response):
-                    # print(response.content)
-                    # response.headers["Content-Disposition"] = "attachment; filename=video.mp4"
-                    # return send_file(response.content,
-                    #                 as_attachment=True,
-                    #                 download_name='video.mp4',
-                    #                 mimetype='video/mp4')
-                    # with open('temp_video.mp4', 'wb') as f:
-                    #     f.write(response.content)
-                    # return send_file('temp_video.mp4', as_attachment=True, download_name='video.mp4', mimetype='video/mp4')
-                    
-
+   
 @main.route('/', methods=['GET', 'POST'])
 def linkedin():
-    video_details = None
-    url=None
     if request.method == 'POST':
         url = request.form['url']
-        # video_details = scrape_post(url)
         video_details = scrape_post_with_selenium(url)
-        if(not video_details['error']):
-            print(video_details)
-            video_url =video_details['video_url']   # Replace with the actual video URL
+        if not video_details['error']:
+            video_url = video_details['video_url']
             response = requests.get(video_url)
             if response.status_code == 200:
-                return send_file(BytesIO(response.content), as_attachment=True, download_name='video.mp4', mimetype='video/mp4')
-                # download_video(BytesIO(response.content))
-                # return render_template('linkedin.html', video_details=video_details)
+                return send_file(BytesIO(response.content), as_attachment=False, mimetype='video/mp4')
             else:
-                return render_template('linkedin.html', video_details=video_details)
-        else:
-            return render_template('linkedin.html', video_details=video_details)            
-    return render_template('linkedin.html', video_details=video_details)
- 
+                return jsonify({'error': 'Failed to download video'}), 500
+        return jsonify({'error': video_details['error']}), 500
+    return render_template('linkedin.html')
